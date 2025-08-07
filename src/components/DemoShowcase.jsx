@@ -169,26 +169,28 @@ const DemoShowcase = () => {
   }, [isPlaying]);
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-16 p-8">
       {/* 功能特色 */}
       <section className="text-center">
-        <h2 className="text-3xl font-bold text-gray-900 mb-4">
-          为什么选择我们？
-        </h2>
-        <p className="text-lg text-gray-600 mb-8 max-w-2xl mx-auto">
-          基于Claude Sonnet 4的智能名片生成器，让您的个人品牌更加专业和吸引人
-        </p>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="mb-12">
+          <h2 className="text-4xl font-bold gradient-text mb-6">
+            为什么选择我们？
+          </h2>
+          <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto leading-relaxed">
+            基于Claude Sonnet 4的智能名片生成器，让您的个人品牌更加专业和吸引人
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {features.map((feature, index) => (
-            <div key={index} className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow">
-              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                <feature.icon className="w-6 h-6 text-blue-600" />
+            <div key={index} className="group bg-gradient-to-br from-white to-gray-50 rounded-2xl p-8 shadow-lg hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 border border-gray-100">
+              <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <feature.icon className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              <h3 className="text-xl font-bold text-gray-900 mb-4">
                 {feature.title}
               </h3>
-              <p className="text-gray-600 text-sm">
+              <p className="text-gray-600 leading-relaxed">
                 {feature.description}
               </p>
             </div>
