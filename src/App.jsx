@@ -1,32 +1,14 @@
 import React, { useState } from 'react';
-import { AuthProvider, useAuth } from './contexts/AuthContext';
 import FileUpload from './components/FileUpload';
 import PersonalCard from './components/PersonalCard';
 import InfoForm from './components/InfoForm';
 import ErrorBoundary from './components/ErrorBoundary';
-import AuthPage from './components/auth/AuthPage';
-import Navbar from './components/Navbar';
-import LoadingSpinner from './components/LoadingSpinner';
 import DemoShowcase from './components/DemoShowcase';
 
-// 主应用内容组件
 const AppContent = () => {
-  const { isAuthenticated, loading } = useAuth();
   const [cardData, setCardData] = useState(null);
   const [currentStep, setCurrentStep] = useState(1);
-  const [showDemo, setShowDemo] = useState(false);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center">
-        <LoadingSpinner size="xl" text="正在加载..." />
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <AuthPage />;
-  }
+  const [showDemo, setShowDemo] = useState(true);
 
   const handleFileUpload = (file, content) => {
     setCurrentStep(2);
@@ -80,119 +62,113 @@ const AppContent = () => {
   ];
 
   return (
-    <>
-      <Navbar />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="container mx-auto px-4 py-8">
-          <header className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
-              个人名片生成器
-            </h1>
-            <p className="text-lg text-gray-600 mb-4">
-              基于Claude Sonnet 4优化的智能名片生成工具
-            </p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+      <div className="container mx-auto px-4 py-8">
+        <header className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 mb-2">
+            个人名片生成器
+          </h1>
+          <p className="text-lg text-gray-600 mb-4">
+            基于Claude Sonnet 4优化的智能名片生成工具
+          </p>
 
-            <div className="flex justify-center space-x-4">
-              <button
-                onClick={() => setShowDemo(false)}
-                className={`px-6 py-2 rounded-lg transition-colors ${
-                  !showDemo
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                创建名片
-              </button>
-              <button
-                onClick={() => setShowDemo(true)}
-                className={`px-6 py-2 rounded-lg transition-colors ${
-                  showDemo
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                }`}
-              >
-                功能演示
-              </button>
-            </div>
-          </header>
-
-          {!showDemo && (
-            <div className="flex justify-center mb-8">
-              <div className="flex items-center space-x-4">
-                {steps.map((step, index) => (
-                  <div key={step.id} className="flex items-center">
-                    <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
-                      currentStep >= step.id
-                        ? 'bg-blue-600 text-white'
-                        : 'bg-gray-200 text-gray-600'
-                    }`}>
-                      {step.id}
-                    </div>
-                    {index < steps.length - 1 && (
-                      <div className={`w-24 h-1 mx-2 ${
-                        currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'
-                      }`}/>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div className="max-w-6xl mx-auto">
-            {showDemo ? (
-              <DemoShowcase />
-            ) : (
-              <>
-                {currentStep === 1 && (
-                  <FileUpload onFileUpload={handleFileUpload} />
-                )}
-
-                {currentStep === 2 && (
-                  <InfoForm
-                    initialData={cardData}
-                    onSubmit={handleManualInput}
-                    onBack={() => setCurrentStep(1)}
-                  />
-                )}
-
-                {currentStep === 3 && cardData && (
-                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    <div>
-                      <PersonalCard data={cardData} />
-                    </div>
-                    <div className="flex flex-col space-y-4">
-                      <button
-                        onClick={() => setCurrentStep(2)}
-                        className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
-                      >
-                        返回编辑
-                      </button>
-                      <button
-                        onClick={() => window.print()}
-                        className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                      >
-                        下载名片
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
+          <div className="flex justify-center space-x-4">
+            <button
+              onClick={() => setShowDemo(false)}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                !showDemo
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              创建名片
+            </button>
+            <button
+              onClick={() => setShowDemo(true)}
+              className={`px-6 py-2 rounded-lg transition-colors ${
+                showDemo
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              }`}
+            >
+              功能演示
+            </button>
           </div>
+        </header>
+
+        {!showDemo && (
+          <div className="flex justify-center mb-8">
+            <div className="flex items-center space-x-4">
+              {steps.map((step, index) => (
+                <div key={step.id} className="flex items-center">
+                  <div className={`flex items-center justify-center w-10 h-10 rounded-full ${
+                    currentStep >= step.id
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-gray-200 text-gray-600'
+                  }`}>
+                    {step.id}
+                  </div>
+                  {index < steps.length - 1 && (
+                    <div className={`w-24 h-1 mx-2 ${
+                      currentStep > step.id ? 'bg-blue-600' : 'bg-gray-200'
+                    }`}></div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        <div className="max-w-6xl mx-auto">
+          {showDemo ? (
+            <DemoShowcase />
+          ) : (
+            <>
+              {currentStep === 1 && (
+                <FileUpload onFileUpload={handleFileUpload} />
+              )}
+
+              {currentStep === 2 && (
+                <InfoForm
+                  initialData={cardData}
+                  onSubmit={handleManualInput}
+                  onBack={() => setCurrentStep(1)}
+                />
+              )}
+
+              {currentStep === 3 && cardData && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  <div>
+                    <PersonalCard data={cardData} />
+                  </div>
+                  <div className="flex flex-col space-y-4">
+                    <button
+                      onClick={() => setCurrentStep(2)}
+                      className="px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+                    >
+                      返回编辑
+                    </button>
+                    <button
+                      onClick={() => window.print()}
+                      className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      下载名片
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
       </div>
-    </>
+    </div>
   );
 };
 
-// 主App组件
 function App() {
   return (
     <ErrorBoundary>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <AppContent />
     </ErrorBoundary>
   );
 }
