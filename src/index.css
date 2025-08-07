@@ -1,0 +1,25 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Noto Sans SC', sans-serif;
+  }
+}
+
+@layer utilities {
+  .gradient-border {
+    position: relative;
+    background: linear-gradient(white, white) padding-box,
+                linear-gradient(135deg, #667eea 0%, #764ba2 100%) border-box;
+    border: 2px solid transparent;
+  }
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  min-height: 100vh;
+}
