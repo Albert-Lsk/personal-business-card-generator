@@ -1,13 +1,16 @@
-import React, { useState } from 'react';
-import { Upload, FileText, Image, AlertCircle } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
+import { Upload, FileText, Image, AlertCircle, CheckCircle, X } from 'lucide-react';
+import LoadingSpinner from './LoadingSpinner';
 
 const FileUpload = ({ onFileUpload }) => {
   const [dragActive, setDragActive] = useState(false);
   const [file, setFile] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [success, setSuccess] = useState(false);
 
-  const handleDrag = (e) => {
+  const handleDrag = useCallback((e) => {
     e.preventDefault();
     e.stopPropagation();
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -15,7 +18,7 @@ const FileUpload = ({ onFileUpload }) => {
     } else if (e.type === 'dragleave') {
       setDragActive(false);
     }
-  };
+  }, []);
 
   const handleDrop = (e) => {
     e.preventDefault();
@@ -28,19 +31,28 @@ const FileUpload = ({ onFileUpload }) => {
     }
   };
 
-  const handleFile = (selectedFile) => {
+  const handleFile = useCallback((selectedFile) => {
+    // 重置状态
+    setError('');
+    setSuccess(false);
+    setUploadProgress(0);
+
     const validTypes = [
       'text/plain',
       'text/markdown',
       'application/pdf',
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'image/jpeg',
-      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      'text/plain'
+      'image/jpg',
+      'image/png'
     ];
 
-    if (!validTypes.includes(selectedFile.type)) {
-      setError('不支持的文件格式。支持：txt, md, pdf, docx, jpg');
+    const validExtensions = ['.txt', '.md', '.pdf', '.docx', '.jpg', '.jpeg', '.png'];
+    const fileName = selectedFile.name.toLowerCase();
+    const hasValidExtension = validExtensions.some(ext => fileName.endsWith(ext));
+
+    if (!validTypes.includes(selectedFile.type) && !hasValidExtension) {
+      setError('不支持的文件格式。支持：txt, md, pdf, docx, jpg, jpeg, png');
       return;
     }
 
@@ -49,22 +61,41 @@ const FileUpload = ({ onFileUpload }) => {
       return;
     }
 
+    if (selectedFile.size === 0) {
+      setError('文件为空，请选择有效文件');
+      return;
+    }
+
     setFile(selectedFile);
-    setError('');
     processFile(selectedFile);
-  };
+  }, []);
 
   const processFile = async (file) => {
     setLoading(true);
-    
+    setUploadProgress(0);
+
     try {
       let content = '';
-      
+
+      // 模拟上传进度
+      const progressInterval = setInterval(() => {
+        setUploadProgress(prev => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return 90;
+          }
+          return prev + 10;
+        });
+      }, 150);
+
       if (file.type === 'text/plain' || file.type === 'text/markdown') {
         content = await file.text();
+        if (!content.trim()) {
+          throw new Error('文件内容为空');
+        }
       } else if (file.type === 'application/pdf') {
         content = 'PDF文件内容（待实现OCR解析）';
-      } else if (file.type === 'image/jpeg') {
+      } else if (file.type.startsWith('image/')) {
         content = '图片文件内容（待实现OCR解析）';
       } else {
         content = '文件内容已接收';
@@ -72,13 +103,20 @@ const FileUpload = ({ onFileUpload }) => {
 
       // 模拟API调用延迟
       setTimeout(() => {
-        onFileUpload(file, content);
-        setLoading(false);
-      }, 1500);
-      
+        clearInterval(progressInterval);
+        setUploadProgress(100);
+        setSuccess(true);
+
+        setTimeout(() => {
+          onFileUpload(file, content);
+          setLoading(false);
+        }, 500);
+      }, 1000);
+
     } catch (err) {
-      setError('文件处理失败，请重试');
+      setError(err.message || '文件处理失败，请重试');
       setLoading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -87,6 +125,15 @@ const FileUpload = ({ onFileUpload }) => {
     if (files && files[0]) {
       handleFile(files[0]);
     }
+  };
+
+  const resetUpload = () => {
+    setFile(null);
+    setError('');
+    setLoading(false);
+    setUploadProgress(0);
+    setSuccess(false);
+    setDragActive(false);
   };
 
   const handleTextInput = (text) => {
@@ -112,42 +159,91 @@ const FileUpload = ({ onFileUpload }) => {
         </div>
 
         {/* 拖拽上传区域 */}
-        <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-            dragActive
-              ? 'border-blue-500 bg-blue-50'
-              : 'border-gray-300 hover:border-gray-400'
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <div className="space-y-4">
-            <Upload className="w-12 h-12 text-gray-400 mx-auto" />
-            <div>
-              <p className="text-lg font-medium text-gray-900">
-                拖拽文件到此处
-              </p>
-              <p className="text-sm text-gray-500">
-                或点击选择文件
-              </p>
+        {!loading && !success && (
+          <div
+            className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+              dragActive
+                ? 'border-blue-500 bg-blue-50'
+                : 'border-gray-300 hover:border-gray-400'
+            }`}
+            onDragEnter={handleDrag}
+            onDragLeave={handleDrag}
+            onDragOver={handleDrag}
+            onDrop={handleDrop}
+          >
+            <div className="space-y-4">
+              <Upload className="w-12 h-12 text-gray-400 mx-auto" />
+              <div>
+                <p className="text-lg font-medium text-gray-900">
+                  拖拽文件到此处
+                </p>
+                <p className="text-sm text-gray-500">
+                  或点击选择文件
+                </p>
+              </div>
+              <input
+                type="file"
+                className="hidden"
+                id="file-upload"
+                onChange={handleInputChange}
+                accept=".txt,.md,.pdf,.docx,.jpg,.jpeg,.png"
+                disabled={loading}
+              />
+              <label
+                htmlFor="file-upload"
+                className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                选择文件
+              </label>
             </div>
-            <input
-              type="file"
-              className="hidden"
-              id="file-upload"
-              onChange={handleInputChange}
-              accept=".txt,.md,.pdf,.docx,.jpg,.jpeg"
-            />
-            <label
-              htmlFor="file-upload"
-              className="inline-block px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition-colors"
-            >
-              选择文件
-            </label>
           </div>
-        </div>
+        )}
+
+        {/* 上传进度 */}
+        {loading && (
+          <div className="border-2 border-blue-200 rounded-lg p-8 text-center bg-blue-50">
+            <div className="space-y-4">
+              <LoadingSpinner size="lg" text="正在处理文件..." />
+              <div className="w-full bg-gray-200 rounded-full h-2">
+                <div
+                  className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                  style={{ width: `${uploadProgress}%` }}
+                ></div>
+              </div>
+              <p className="text-sm text-gray-600">{uploadProgress}% 完成</p>
+              {file && (
+                <div className="flex items-center justify-center space-x-2 text-sm text-gray-700">
+                  <FileText className="w-4 h-4" />
+                  <span>{file.name}</span>
+                  <span className="text-gray-500">({(file.size / 1024).toFixed(1)} KB)</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* 上传成功 */}
+        {success && !loading && (
+          <div className="border-2 border-green-200 rounded-lg p-8 text-center bg-green-50">
+            <div className="space-y-4">
+              <CheckCircle className="w-12 h-12 text-green-600 mx-auto" />
+              <div>
+                <p className="text-lg font-medium text-green-900">
+                  文件上传成功！
+                </p>
+                <p className="text-sm text-green-700">
+                  正在跳转到编辑页面...
+                </p>
+              </div>
+              {file && (
+                <div className="flex items-center justify-center space-x-2 text-sm text-green-700">
+                  <FileText className="w-4 h-4" />
+                  <span>{file.name}</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 支持的文件类型 */}
         <div className="mt-6">
@@ -190,19 +286,31 @@ const FileUpload = ({ onFileUpload }) => {
 
         {/* 错误提示 */}
         {error && (
-          <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center">
-            <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-            <span className="text-sm text-red-800">{error}</span>
+          <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
+                <span className="text-sm text-red-800">{error}</span>
+              </div>
+              <button
+                onClick={resetUpload}
+                className="text-red-600 hover:text-red-800 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
           </div>
         )}
 
-        {/* 加载状态 */}
-        {loading && (
+        {/* 重置按钮 */}
+        {(file || success) && !loading && (
           <div className="mt-4 text-center">
-            <div className="inline-flex items-center space-x-2">
-              <div className="w-4 h-4 bg-blue-600 rounded-full animate-pulse"></div>
-              <span className="text-gray-600">正在处理您的信息...</span>
-            </div>
+            <button
+              onClick={resetUpload}
+              className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+            >
+              重新上传
+            </button>
           </div>
         )}
       </div>

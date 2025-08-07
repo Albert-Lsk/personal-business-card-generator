@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  # 开发环境前端
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: business-card-generator-dev
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
+    restart: unless-stopped
+    networks:
+      - dev-network
+    command: npm run dev
+
+  # 开发环境Redis
+  redis-dev:
+    image: redis:7-alpine
+    container_name: business-card-redis-dev
+    ports:
+      - "6380:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+    restart: unless-stopped
+    networks:
+      - dev-network
+
+volumes:
+  redis_dev_data:
+    driver: local
+
+networks:
+  dev-network:
+    driver: bridge
